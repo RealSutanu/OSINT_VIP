@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAPAJI SUTANU | ARCHITECT OSINT FRAMEWORK</title>
+    <meta name="description" content="Elite Monochromatic OSINT Framework. Curated by Papaji Sutanu.">
+    
+    <!-- External Fonts & Icons (Permitted Assets) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* * CORE VARIABLES & RESET 
+         */
+        :root {
+            --bg-deep: #050505;
+            --bg-glass: rgba(10, 10, 10, 0.65);
+            --bg-card: rgba(20, 20, 20, 0.4);
+            --bg-card-hover: rgba(40, 40, 40, 0.6);
+            
+            --border-dim: rgba(255, 255, 255, 0.08);
+            --border-light: rgba(255, 255, 255, 0.15);
+            
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --accent-glow: rgba(255, 255, 255, 0.15);
+            
+            --github-color: #ffffff;
+            --telegram-color: #24A1DE;
+            --web-color: #00ff9d;
+            
+            --sidebar-width: 280px;
+            --ease-fluid: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+            cursor: none; /* Hide default cursor */
+        }
+
+        /* CUSTOM CURSOR */
+        .cursor-dot {
+            width: 5px;
+            height: 5px;
+            background: white;
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+        
+        .cursor-outline {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(255,255,255,0.5);
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s;
+        }
+
+        body:active .cursor-outline {
+            width: 45px;
+            height: 45px;
+            background-color: rgba(255,255,255,0.1);
+            border-color: #fff;
+        }
+
+        /* SCROLLBAR CUSTOMIZATION */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* * CANVAS BACKGROUND 
+         */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* * LAYOUT STRUCTURE 
+         */
+        .app-container {
+            display: flex;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100%;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s var(--ease-fluid);
+        }
+
+        .profile-section {
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-bottom: 1px solid var(--border-dim);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+        }
+
+        .profile-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 2px solid var(--border-light);
+            margin-bottom: 1rem;
+            object-fit: cover;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: transform 0.4s var(--ease-fluid);
+        }
+        
+        .profile-img:hover { transform: scale(1.05); border-color: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.3); }
+
+        .profile-name { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.05em; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .profile-role { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .social-link:hover { color: #fff; transform: translateY(-2px); text-shadow: 0 0 15px rgba(255,255,255,0.8); }
+
+        /* NAVIGATION */
+        .nav-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1rem;
+        }
+
+        .nav-category {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #555;
+            margin: 1.5rem 0 0.5rem 10px;
+            font-weight: 700;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 10px 15px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            margin-bottom: 2px;
+            transition: all 0.2s var(--ease-fluid);
+            border-left: 2px solid transparent;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding-left: 20px;
+            border-left-color: #fff;
+            text-shadow: 0 0 8px rgba(255,255,255,0.3);
+        }
+
+        .nav-item i { width: 20px; text-align: center; margin-right: 8px; font-size: 0.8rem; }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* HEADER */
+        .top-bar {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            padding: 0 3rem;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-dim);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-dim);
+            padding: 14px 20px 14px 50px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            background: rgba(0, 0, 0, 0.8);
+            border-color: #666;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .header-stats {
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item span { color: #fff; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.4); }
+
+        /* TOOLS GRID */
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            scroll-behavior: smooth;
+        }
+
+        .category-block {
+            margin-bottom: 4rem;
+            scroll-margin-top: 100px; /* Offset for sticky header */
+        }
+        
+        .category-block.highlight-db {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            margin-top: 20px;
+        }
+        .category-block.highlight-db .category-title {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .category-count {
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #aaa;
+            font-family: 'JetBrains Mono';
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        /* CARD DESIGN */
+        .tool-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: visible; /* Changed for tooltip */
+            backdrop-filter: blur(5px);
+            height: 100%;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+            transform-origin: left;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            background: var(--bg-card-hover);
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .tool-card:hover::before { transform: scaleX(1); }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .tool-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #e0e0e0;
+            transition: color 0.3s;
+        }
+
+        .tool-card:hover .tool-name { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.5); }
+
+        /* TOOL TYPE ICONS & TOOLTIPS */
+        .tool-type-icon {
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .icon-github { color: var(--github-color); filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+        .icon-telegram { color: var(--telegram-color); filter: drop-shadow(0 0 5px rgba(36,161,222,0.5)); }
+        .icon-web { color: var(--web-color); filter: drop-shadow(0 0 5px rgba(0,255,157,0.3)); }
+
+        .tool-type-icon::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 130%;
+            right: -10px;
+            background: #000;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(5px);
+            transition: all 0.2s var(--ease-fluid);
+            pointer-events: none;
+            font-family: 'JetBrains Mono', monospace;
+            z-index: 100;
+            font-weight: bold;
+        }
+
+        .tool-type-icon:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .tool-desc {
+            font-size: 0.75rem;
+            color: #777;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .tool-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tool-meta i { font-size: 0.6rem; }
+
+        /* FOOTER / DISCLAIMER */
+        .footer-legal {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-dim);
+            text-align: center;
+            color: #444;
+            font-size: 0.7rem;
+            padding-bottom: 2rem;
+        }
+        
+        .footer-legal p { margin-bottom: 8px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); position: absolute; z-index: 100; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+            .sidebar.active { transform: translateX(0); }
+            .top-bar { padding: 0 1.5rem; }
+            .content-scroll { padding: 2rem 1.5rem; }
+            .mobile-toggle { display: block; margin-right: 15px; cursor: pointer; color: #fff; }
+            /* Show default cursor on mobile */
+            * { cursor: auto; }
+            .cursor-dot, .cursor-outline { display: none; }
+        }
+        @media (min-width: 901px) { .mobile-toggle { display: none; } }
+
+    </style>
+</head>
+<body>
+
+    <!-- CUSTOM CURSOR -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- CANVAS BACKGROUND -->
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="profile-section">
+                <img src="https://i.postimg.cc/Bnd7914y/channels4-profile-(2).jpg" alt="Papaji Sutanu" class="profile-img">
+                <div class="profile-name">PAPAJI SUTANU</div>
+                <div class="profile-role">OSINT ARCHITECT</div>
+                <div class="social-links">
+                    <a href="https://github.com/RealSutanu" target="_blank" class="social-link" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://youtube.com/@HUNTERXRANDOM" target="_blank" class="social-link" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="https://instagram.com/zeff.xd" target="_blank" class="social-link" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="mailto:sutanumitra42@gmail.com" class="social-link" title="Email"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+            </div>
+
+            <div class="nav-wrapper" id="navWrapper">
+                <!-- Categories injected by JS -->
+            </div>
+        </aside>
+
+        <!-- MAIN AREA -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="mobile-toggle" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+                
+                <div class="search-container">
+                    <i class="fa-solid fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search Tools..." autocomplete="off">
+                </div>
+
+                <div class="header-stats">
+                    <div class="stat-item">TOOLS: <span id="totalTools">0</span></div>
+                    <div class="stat-item" style="margin-left: 15px">VER: <span>286</span></div>
+                </div>
+            </header>
+
+            <div class="content-scroll" id="contentArea">
+                <div id="gridContainer">
+                    <!-- Tools injected by JS -->
+                </div>
+
+                <div class="footer-legal">
+                    <p><strong>LEGAL DISCLAIMER</strong></p>
+                    <p>This framework provides links to publicly available OSINT tools for educational and investigative purposes only.</p>
+                    <p>The user is solely responsible for ensuring all activities comply with local and international laws.</p>
+                    <p>Do not use these tools for harassment, stalking, or unauthorized access to systems.</p>
+                    <p>&copy; 2025 Papaji Sutanu Architecture.</p>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        /**
+         * 1. DATABASE CONFIGURATION
+         * Comprehensive list expanded to meet the "at least 10" requirement.
+         */
+        const osintData = {
+            "INDIA DB": [
+                { name: "Sutanu OSINT", url: "https://t.me/passatosintbyzeffbot", desc: "Elite Premium Bot by Papaji." },
+                { name: "Truecaller ++", url: "https://t.me/TrueCalleRobot", desc: "Enhanced Caller ID & Info." },
+                { name: "ProxyEarth Reborn", url: "https://t.me/Itzdhruvnuminfonew_bot", desc: "Advanced Data Lookup Bot." }
+            ],
+            "Username": [
+                { name: "Sherlock", url: "https://github.com/sherlock-project/sherlock", desc: "Hunt down social media accounts by username across social networks." },
+                { name: "WhatsMyName", url: "https://whatsmyname.app/", desc: "Fast and effective username enumeration tool on web." },
+                { name: "Namechk", url: "https://namechk.com/", desc: "Check username availability across popular sites." },
+                { name: "Namecheckup", url: "https://namecheckup.com/", desc: "Search for available usernames and domain names." },
+                { name: "Instant Username", url: "https://instantusername.com/", desc: "Instantly check username availability on 100+ sites." },
+                { name: "UserSearch.org", url: "https://usersearch.org/", desc: "Find people by username, email, or phone." },
+                { name: "KnowEm", url: "https://knowem.com/", desc: "Search for your brand, product, personal name or username." },
+                { name: "CheckUsernames", url: "https://checkusernames.com/", desc: "Check the availability of a specific username." },
+                { name: "Maigret", url: "https://github.com/soxoj/maigret", desc: "Collect a dossier on a person by username only." },
+                { name: "Social Analyzer", url: "https://github.com/qeeqbox/social-analyzer", desc: "API, CLI & Web App for analyzing & finding a person's profile." },
+                { name: "Blackbird", url: "https://github.com/p1ngul1n0/blackbird", desc: "OSINT tool to search for accounts by username." },
+                { name: "NexusX", url: "https://github.com/Nexus-Gr/NexusX", desc: "Advanced username search tool." }
+            ],
+            "Email Address": [
+                { name: "Hunter.io", url: "https://hunter.io/", desc: "Find professional email addresses in seconds." },
+                { name: "EmailRep", url: "https://emailrep.io/", desc: "Email reputation and risk analysis." },
+                { name: "HaveIBeenPwned", url: "https://haveibeenpwned.com/", desc: "Check if you have an account that has been compromised." },
+                { name: "EmailPermutator", url: "http://metricsparrow.com/toolkit/email-permutator/", desc: "Generate potential email addresses for a target." },
+                { name: "DeHashed", url: "https://dehashed.com/", desc: "Free & deep web asset search engine." },
+                { name: "That’s Them", url: "https://thatsthem.com/", desc: "Reverse email lookup service." },
+                { name: "Email-Checker.net", url: "https://email-checker.net/", desc: "Verify if an email address exists." },
+                { name: "VoilaNorbert", url: "https://www.voilanorbert.com/", desc: "Find anyone's email address." },
+                { name: "IntelX Email", url: "https://intelx.io/tools?tab=email", desc: "Intelligence X email search tools." },
+                { name: "Holehe", url: "https://github.com/megadose/holehe", desc: "Check if an email is attached to an account on sites." },
+                { name: "Epieos", url: "https://epieos.com/", desc: "Retrieve info from email without notifying the user." },
+                { name: "Ghunt", url: "https://github.com/mxrch/GHunt", desc: "Offensive Google account investigation tool." }
+            ],
+            "Breached Data": [
+                { name: "HaveIBeenPwned", url: "https://haveibeenpwned.com/", desc: "The gold standard for breach checks." },
+                { name: "DeHashed", url: "https://dehashed.com/", desc: "Search engine for viewed compromised assets." },
+                { name: "BreachDirectory", url: "https://breachdirectory.org/", desc: "Search through billions of breached records." },
+                { name: "LeakCheck", url: "https://leakcheck.io/", desc: "Check your data against public data breaches." },
+                { name: "Snusbase", url: "https://snusbase.com/", desc: "Search for leaked databases and compromised accounts." },
+                { name: "Intelligence X", url: "https://intelx.io/", desc: "Search engine for darknet and public data." },
+                { name: "Firefox Monitor", url: "https://monitor.firefox.com/", desc: "See if you've been part of a data breach." },
+                { name: "Hudson Rock", url: "https://cavalier.hudsonrock.com/", desc: "Cybercrime intelligence database." },
+                { name: "Leak-Lookup", url: "https://leak-lookup.com/", desc: "Search through thousands of data breaches." },
+                { name: "Vigilante.pw", url: "https://vigilante.pw/", desc: "Database of breached websites." },
+                { name: "ScatterSecrets", url: "https://scattersecrets.com/", desc: "Search specifically for pasted password dumps." }
+            ],
+            "Domain Name": [
+                { name: "WHOIS Lookup", url: "https://who.is/", desc: "Lookup domain and IP owner information." },
+                { name: "SecurityTrails", url: "https://securitytrails.com/", desc: "Total historical DNS data." },
+                { name: "DomainTools", url: "https://research.domaintools.com/", desc: "Advanced domain research and monitoring." },
+                { name: "ViewDNS", url: "https://viewdns.info/", desc: "One source for free network tools." },
+                { name: "DNSDumpster", url: "https://dnsdumpster.com/", desc: "Domain research tool that can discover hosts." },
+                { name: "BuiltWith", url: "https://builtwith.com/", desc: "Web technology profiler." },
+                { name: "Netcraft", url: "https://searchdns.netcraft.com/", desc: "Internet security services and data mining." },
+                { name: "RiskIQ PassiveTotal", url: "https://community.riskiq.com/", desc: "Threat infrastructure analysis." },
+                { name: "WhoisXML API", url: "https://whois.whoisxmlapi.com/", desc: "Domain research suite." },
+                { name: "CRT.sh", url: "https://crt.sh/", desc: "Certificate Search." },
+                { name: "Sublist3r", url: "https://github.com/aboul3la/Sublist3r", desc: "Fast subdomains enumeration tool." }
+            ],
+            "IP Address": [
+                { name: "Shodan", url: "https://www.shodan.io/", desc: "Search engine for Internet-connected devices." },
+                { name: "Censys", url: "https://censys.io/", desc: "Attack surface management." },
+                { name: "AbuseIPDB", url: "https://www.abuseipdb.com/", desc: "IP address reputation check." },
+                { name: "IPinfo", url: "https://ipinfo.io/", desc: "Comprehensive IP address data." },
+                { name: "IPVoid", url: "https://www.ipvoid.com/", desc: "IP blacklist check and IP reputation." },
+                { name: "GreyNoise", url: "https://greynoise.io/", desc: "Analyze internet scanning traffic." },
+                { name: "VirusTotal IP", url: "https://www.virustotal.com/gui/home/search", desc: "Analyze suspicious IPs." },
+                { name: "ZoomEye", url: "https://www.zoomeye.org/", desc: "Cyberspace search engine." },
+                { name: "FOFA", url: "https://fofa.info/", desc: "Cyberspace mapping." },
+                { name: "CriminalIP", url: "https://www.criminalip.io/", desc: "Cyber threat intelligence search engine." },
+                { name: "MaxMind", url: "https://www.maxmind.com/en/geoip-demo", desc: "GeoIP Demo." }
+            ],
+            "Images / Videos": [
+                { name: "Google Reverse Image", url: "https://images.google.com/", desc: "Search by image." },
+                { name: "Yandex Images", url: "https://yandex.com/images/", desc: "Robust reverse image search (often better than Google)." },
+                { name: "TinEye", url: "https://tineye.com/", desc: "Reverse image search engine." },
+                { name: "InVID", url: "https://www.invid-project.eu/", desc: "Video verification plugin." },
+                { name: "FotoForensics", url: "http://fotoforensics.com/", desc: "Digital picture forensics." },
+                { name: "ExifTool", url: "https://exiftool.org/", desc: "Read, write and edit meta information." },
+                { name: "Jeffrey’s EXIF Viewer", url: "http://exif.regex.info/exif.cgi", desc: "Online EXIF viewer." },
+                { name: "Amnesty YouTube Dataviewer", url: "https://citizenevidence.amnestyusa.org/", desc: "Check YouTube video upload times." },
+                { name: "PimEyes", url: "https://pimeyes.com/", desc: "Face recognition search engine." },
+                { name: "Forensically", url: "https://29a.ch/photo-forensics/", desc: "Photo forensics for the web." },
+                { name: "FaceCheck.ID", url: "https://facecheck.id/", desc: "Face recognition search engine." }
+            ],
+            "Social Networks": [
+                { name: "Social Searcher", url: "https://www.social-searcher.com/", desc: "Free social media search engine." },
+                { name: "CrowdTangle", url: "https://apps.crowdtangle.com/public", desc: "Link checker for social spread." },
+                { name: "TweetDeck", url: "https://tweetdeck.twitter.com/", desc: "Dashboard for Twitter management." },
+                { name: "Twint", url: "https://github.com/twintproject/twint", desc: "Twitter scraping tool." },
+                { name: "Followerwonk", url: "https://followerwonk.com/", desc: "Twitter analytics." },
+                { name: "Facebook Graph Search", url: "https://sowdust.github.io/fb-search/", desc: "Tool to use FB graph search." },
+                { name: "LinkedIn Search", url: "https://www.linkedin.com/search/results/all/", desc: "Standard LinkedIn search." },
+                { name: "Reddit Investigator", url: "http://www.redditinvestigator.com/", desc: "Information on Reddit users." },
+                { name: "VK Search", url: "https://vk.com/search", desc: "Search Russia's largest social network." },
+                { name: "Instagram OSINT Tools", url: "https://github.com/Datalux/Osintgram", desc: "Instagram OSINT tool on Github." },
+                { name: "SnapMap", url: "https://map.snapchat.com/", desc: "Snapchat public stories map." }
+            ],
+            "Instant Messaging": [
+                { name: "Telegram OSINT", url: "https://github.com/th3unkn0n/osi.ig", desc: "Telegram investigation tools." },
+                { name: "TGStat", url: "https://tgstat.com/", desc: "Telegram channel analytics." },
+                { name: "Telemetr", url: "https://telemetr.io/", desc: "Telegram analytics and catalog." },
+                { name: "TelegramDB", url: "https://telegramdb.org/", desc: "Telegram database search." },
+                { name: "Discord Lookup", url: "https://discord.id/", desc: "Lookup Discord user IDs." },
+                { name: "WhatsApp OSINT", url: "https://github.com/qdriq/WhatsApp-OSINT", desc: "WhatsApp tools." },
+                { name: "Signal Metadata", url: "https://github.com/signalapp", desc: "Signal research resources." },
+                { name: "Slack Search", url: "https://slack.com/", desc: "Search within public workspaces." },
+                { name: "Matrix Explorer", url: "https://matrix.org/", desc: "Explore the Matrix network." },
+                { name: "IRC Logs", url: "http://irc.netsplit.de/", desc: "Search IRC networks and logs." }
+            ],
+            "People Search": [
+                { name: "Pipl", url: "https://pipl.com/", desc: "Identity resolution engine." },
+                { name: "Spokeo", url: "https://www.spokeo.com/", desc: "People search white pages." },
+                { name: "Whitepages", url: "https://www.whitepages.com/", desc: "Find people, contact info & background checks." },
+                { name: "BeenVerified", url: "https://www.beenverified.com/", desc: "Background check company." },
+                { name: "FastPeopleSearch", url: "https://www.fastpeoplesearch.com/", desc: "Free people search." },
+                { name: "TruePeopleSearch", url: "https://www.truepeoplesearch.com/", desc: "Find people for free." },
+                { name: "Radaris", url: "https://radaris.com/", desc: "Public records search." },
+                { name: "PeekYou", url: "https://www.peekyou.com/", desc: "People search engine." },
+                { name: "ZabaSearch", url: "https://www.zabasearch.com/", desc: "Free people search and public information." },
+                { name: "That’s Them", url: "https://thatsthem.com/", desc: "People search by various data points." },
+                { name: "FamilyTreeNow", url: "https://www.familytreenow.com/", desc: "Genealogy and people search." }
+            ],
+            "Telephone Numbers": [
+                { name: "Truecaller", url: "https://www.truecaller.com/", desc: "Identify unknown numbers." },
+                { name: "NumLookup", url: "https://www.numlookup.com/", desc: "Free reverse phone lookup." },
+                { name: "PhoneInfoga", url: "https://github.com/sundowndev/phoneinfoga", desc: "Advanced phone number OSINT framework." },
+                { name: "Sync.me", url: "https://sync.me/", desc: "Caller ID and spam blocker." },
+                { name: "Whoscall", url: "https://whoscall.com/", desc: "Identify caller ID." },
+                { name: "CallApp", url: "https://callapp.com/", desc: "Caller ID and recording." },
+                { name: "ReversePhoneCheck", url: "https://www.reversephonecheck.com/", desc: "Phone number investigation." },
+                { name: "IntelX Phone", url: "https://intelx.io/tools?tab=phone", desc: "Intelligence X phone tools." },
+                { name: "SearchBug", url: "https://www.searchbug.com/", desc: "People and data search." },
+                { name: "NumVerify", url: "https://numverify.com/", desc: "Global phone number validation." },
+                { name: "SpyDialer", url: "https://www.spydialer.com/", desc: "Free reverse lookup." }
+            ],
+            "Geolocation / Maps": [
+                { name: "Google Maps", url: "https://www.google.com/maps", desc: "Standard mapping service." },
+                { name: "OpenStreetMap", url: "https://www.openstreetmap.org/", desc: "Open license map." },
+                { name: "Mapillary", url: "https://www.mapillary.com/", desc: "Street-level imagery." },
+                { name: "Wikimapia", url: "http://wikimapia.org/", desc: "Collaborative mapping." },
+                { name: "Sentinel Hub", url: "https://www.sentinel-hub.com/", desc: "Satellite imagery." },
+                { name: "NASA Worldview", url: "https://worldview.earthdata.nasa.gov/", desc: "Interactive interface for browsing satellite imagery." },
+                { name: "GeoHack", url: "https://geohack.toolforge.org/", desc: "Map sources for coordinates." },
+                { name: "What3Words", url: "https://what3words.com/", desc: "Precise location system." },
+                { name: "MarineTraffic", url: "https://www.marinetraffic.com/", desc: "Ship tracking." },
+                { name: "FlightRadar24", url: "https://www.flightradar24.com/", desc: "Live flight tracker." },
+                { name: "SunCalc", url: "https://suncalc.org/", desc: "Sun position and shadows." }
+            ],
+            "Search Engines": [
+                { name: "Google Dorks", url: "https://www.exploit-db.com/google-hacking-database", desc: "Google Hacking Database." },
+                { name: "Bing Advanced", url: "https://www.bing.com/", desc: "Bing search with operators." },
+                { name: "Yandex Search", url: "https://yandex.com/", desc: "Russian search engine." },
+                { name: "DuckDuckGo", url: "https://duckduckgo.com/", desc: "Privacy-focused search." },
+                { name: "Brave Search", url: "https://search.brave.com/", desc: "Independent index." },
+                { name: "Startpage", url: "https://www.startpage.com/", desc: "Google results with privacy." },
+                { name: "Mojeek", url: "https://www.mojeek.com/", desc: "Independent crawler." },
+                { name: "Baidu", url: "https://www.baidu.com/", desc: "Chinese search engine." },
+                { name: "SearX", url: "https://searx.space/", desc: "Metasearch engine aggregator." },
+                { name: "Ahmia", url: "https://ahmia.fi/", desc: "Search Tor hidden services." },
+                { name: "Carrot2", url: "https://search.carrot2.org/", desc: "Clustering search engine." }
+            ],
+            "Forums / Blogs": [
+                { name: "Reddit", url: "https://www.reddit.com/", desc: "Front page of the internet." },
+                { name: "4chan Archives", url: "https://4plebs.org/", desc: "Archives of 4chan boards." },
+                { name: "StackExchange", url: "https://stackexchange.com/", desc: "Q&A communities." },
+                { name: "GitHub Discussions", url: "https://github.com/discussions", desc: "Developer conversations." },
+                { name: "Hacker News", url: "https://news.ycombinator.com/", desc: "Tech news aggregator." },
+                { name: "Medium", url: "https://medium.com/", desc: "Publishing platform." },
+                { name: "Pastebin Archives", url: "https://pastebin.com/archive", desc: "Public pastes." },
+                { name: "KiwiFarms", url: "https://kiwifarms.net/", desc: "Forum for discussion of online eccentrics." },
+                { name: "BoardReader", url: "https://boardreader.com/", desc: "Forum search engine." },
+                { name: "Wayback Forums", url: "https://archive.org/details/software", desc: "Archived forum software and data." },
+                { name: "Omegle Logs", url: "https://www.omegle.com/", desc: "Chat logs (if available/archived)." }
+            ],
+            "Archives": [
+                { name: "Wayback Machine", url: "https://archive.org/web/", desc: "Internet Archive." },
+                { name: "Archive.today", url: "https://archive.today/", desc: "Webpage capture." },
+                { name: "Library of Congress", url: "https://www.loc.gov/", desc: "Web archiving." },
+                { name: "UK Web Archive", url: "https://www.webarchive.org.uk/", desc: "UK domain archive." },
+                { name: "National Archives", url: "https://www.nationalarchives.gov.uk/", desc: "UK government records." },
+                { name: "OldMapsOnline", url: "https://www.oldmapsonline.org/", desc: "Historical maps." },
+                { name: "Newspaper Archive", url: "https://newspaperarchive.com/", desc: "Historical newspapers." },
+                { name: "Google Cache", url: "http://webcache.googleusercontent.com/", desc: "Cached versions of sites." },
+                { name: "Archive-It", url: "https://archive-it.org/", desc: "Institutional web archiving." },
+                { name: "Perma.cc", url: "https://perma.cc/", desc: "Permanent links for citations." },
+                { name: "GhostArchive", url: "https://ghostarchive.org/", desc: "Web archiving alternative." }
+            ],
+            "Metadata": [
+                { name: "ExifTool", url: "https://exiftool.org/", desc: "The standard for metadata extraction." },
+                { name: "Metadata2Go", url: "https://www.metadata2go.com/", desc: "Online metadata viewer." },
+                { name: "FOCA", url: "https://github.com/ElevenPaths/FOCA", desc: "Fingerprinting organizations with collected archives." },
+                { name: "Metagoofil", url: "https://github.com/laramies/metagoofil", desc: "Metadata extraction." },
+                { name: "PDFInfo", url: "https://www.pdfinfo.com/", desc: "PDF metadata viewer." },
+                { name: "ImageMagick", url: "https://imagemagick.org/", desc: "Create, edit, compose, or convert bitmap images." },
+                { name: "Tika", url: "https://tika.apache.org/", desc: "Content analysis toolkit." },
+                { name: "DOCX Viewer", url: "https://jsonformatter.org/docx-viewer", desc: "View DOCX structure." },
+                { name: "Forensically", url: "https://29a.ch/photo-forensics/", desc: "Metadata and strings." },
+                { name: "Ghiro", url: "https://github.com/ghiro", desc: "Image forensics." },
+                { name: "Exif.regex", url: "http://exif.regex.info/exif.cgi", desc: "Online Exif viewer." }
+            ],
+            "Dark Web": [
+                { name: "Ahmia", url: "https://ahmia.fi/", desc: "Tor search engine." },
+                { name: "Torch", url: "http://xmh57jrzrnw6insl.onion.link/", desc: "Tor search." },
+                { name: "DarkSearch", url: "https://darksearch.io/", desc: "Dark web search engine." },
+                { name: "OnionSearch", url: "https://github.com/megadose/OnionSearch", desc: "Script to search on onion sites." },
+                { name: "Tor Metrics", url: "https://metrics.torproject.org/", desc: "Tor network statistics." },
+                { name: "IntelX Dark Web", url: "https://intelx.io/", desc: "Darknet data." },
+                { name: "Dark.fail", url: "https://dark.fail/", desc: "List of working onion sites." },
+                { name: "Recon-ng DW", url: "https://github.com/lanmaster53/recon-ng", desc: "Recon framework." },
+                { name: "OnionScan", url: "https://github.com/s-rah/onionscan", desc: "Tool for investigating onion services." },
+                { name: "DeepDotWeb", url: "https://www.deepdotweb.com/", desc: "News (Archived)." },
+                { name: "Tor Browser", url: "https://www.torproject.org/", desc: "Access the dark web." }
+            ],
+            "Digital Currency": [
+                { name: "Blockchain Explorer", url: "https://www.blockchain.com/explorer", desc: "Bitcoin block explorer." },
+                { name: "Etherscan", url: "https://etherscan.io/", desc: "Ethereum blockchain explorer." },
+                { name: "BTC.com", url: "https://btc.com/", desc: "Bitcoin pool stats and explorer." },
+                { name: "WalletExplorer", url: "https://www.walletexplorer.com/", desc: "Smart bitcoin wallet explorer." },
+                { name: "CipherTrace", url: "https://ciphertrace.com/", desc: "Cryptocurrency intelligence." },
+                { name: "Chainalysis", url: "https://www.chainalysis.com/", desc: "Blockchain data platform." },
+                { name: "Crystal Blockchain", url: "https://crystalblockchain.com/", desc: "Analytics and investigation." },
+                { name: "OXT", url: "https://oxt.me/", desc: "Bitcoin analytics." },
+                { name: "Blockchair", url: "https://blockchair.com/", desc: "Universal blockchain explorer." },
+                { name: "Bitquery", url: "https://bitquery.io/", desc: "Blockchain graph." },
+                { name: "Whale Alert", url: "https://whale-alert.io/", desc: "Tracking large transactions." }
+            ],
+            "Encoding / Decoding": [
+                { name: "CyberChef", url: "https://gchq.github.io/CyberChef/", desc: "The Cyber Swiss Army Knife." },
+                { name: "dCode", url: "https://www.dcode.fr/", desc: "Universal ciphers and tools." },
+                { name: "Base64 Decode", url: "https://www.base64decode.org/", desc: "Decode Base64." },
+                { name: "Hash Analyzer", url: "https://www.tunnelsup.com/hash-analyzer/", desc: "Identify hash types." },
+                { name: "URL Decoder", url: "https://www.urldecoder.org/", desc: "Decode URLs." },
+                { name: "JWT.io", url: "https://jwt.io/", desc: "Decode JSON Web Tokens." },
+                { name: "Morse Decoder", url: "https://morsedecoder.com/", desc: "Morse code translator." },
+                { name: "Unicode Tools", url: "https://unicode-table.com/", desc: "Character lookup." },
+                { name: "ROT Cipher", url: "https://rot13.com/", desc: "ROT13 and variants." },
+                { name: "StegOnline", url: "https://stegonline.georgeom.net/", desc: "Online steganography tool." },
+                { name: "Hex Editor", url: "https://hexed.it/", desc: "Online hex editing." }
+            ],
+            "AI Tools": [
+                { name: "ChatGPT", url: "https://chat.openai.com/", desc: "OpenAI Conversational Model." },
+                { name: "Gemini", url: "https://gemini.google.com/", desc: "Google's AI." },
+                { name: "Claude", url: "https://claude.ai/", desc: "Anthropic AI." },
+                { name: "Perplexity", url: "https://www.perplexity.ai/", desc: "AI Search Engine." },
+                { name: "Phind", url: "https://www.phind.com/", desc: "AI for developers." },
+                { name: "OpenInterpreter", url: "https://github.com/OpenInterpreter/open-interpreter", desc: "Let LLMs run code." },
+                { name: "OSINT GPTs", url: "https://chat.openai.com/gpts", desc: "Custom GPTs for OSINT." },
+                { name: "Maltego AI", url: "https://www.maltego.com/", desc: "AI integration in Maltego." },
+                { name: "AutoGPT", url: "https://github.com/Significant-Gravitas/Auto-GPT", desc: "Autonomous GPT-4." },
+                { name: "LangChain", url: "https://github.com/langchain-ai/langchain", desc: "Building applications with LLMs." },
+                { name: "HuggingFace", url: "https://huggingface.co/", desc: "AI models and datasets." }
+            ],
+            "Malware Analysis": [
+                { name: "VirusTotal", url: "https://www.virustotal.com/", desc: "Analyze suspicious files." },
+                { name: "Hybrid Analysis", url: "https://www.hybrid-analysis.com/", desc: "Free malware analysis service." },
+                { name: "Any.Run", url: "https://app.any.run/", desc: "Interactive malware hunting." },
+                { name: "Joe Sandbox", url: "https://www.joesandbox.com/", desc: "Deep malware analysis." },
+                { name: "Intezer", url: "https://analyze.intezer.com/", desc: "Analyze code genetics." },
+                { name: "Cuckoo Sandbox", url: "https://cuckoosandbox.org/", desc: "Automated malware analysis." },
+                { name: "MalShare", url: "https://malshare.com/", desc: "Malware repository." },
+                { name: "CAPE Sandbox", url: "https://capesandbox.com/", desc: "Automated malware analysis." },
+                { name: "ThreatGrid", url: "https://panacea.threatgrid.com/", desc: "Cisco malware analysis." },
+                { name: "VMRay", url: "https://www.vmray.com/", desc: "Advanced threat analysis." },
+                { name: "Yara", url: "https://virustotal.github.io/yara/", desc: "Pattern matching swiss knife." }
+            ],
+            "Exploits / Advisories": [
+                { name: "Exploit-DB", url: "https://www.exploit-db.com/", desc: "Exploit Database." },
+                { name: "CVE Details", url: "https://www.cvedetails.com/", desc: "CVE security vulnerability database." },
+                { name: "NVD", url: "https://nvd.nist.gov/", desc: "National Vulnerability Database." },
+                { name: "Packet Storm", url: "https://packetstormsecurity.com/", desc: "Security news and exploits." },
+                { name: "Vulners", url: "https://vulners.com/", desc: "Security database." },
+                { name: "Rapid7 DB", url: "https://www.rapid7.com/db/", desc: "Vulnerability & Exploit Database." },
+                { name: "OpenCVE", url: "https://www.opencve.io/", desc: "CVE alerts." },
+                { name: "ZeroDay Initiative", url: "https://www.zerodayinitiative.com/", desc: "Bug bounty program." },
+                { name: "MITRE ATT&CK", url: "https://attack.mitre.org/", desc: "Adversarial tactics and techniques." },
+                { name: "SecurityFocus", url: "https://www.securityfocus.com/", desc: "Security news." },
+                { name: "CXSecurity", url: "https://cxsecurity.com/", desc: "World Exploit Database." }
+            ],
+            "Threat Intelligence": [
+                { name: "AlienVault OTX", url: "https://otx.alienvault.com/", desc: "Open Threat Exchange." },
+                { name: "MISP", url: "https://www.misp-project.org/", desc: "Malware Information Sharing Platform." },
+                { name: "ThreatCrowd", url: "https://www.threatcrowd.org/", desc: "Search engine for threats." },
+                { name: "IntelX", url: "https://intelx.io/", desc: "Intelligence X." },
+                { name: "GreyNoise", url: "https://greynoise.io/", desc: "Filter internet noise." },
+                { name: "Abuse.ch", url: "https://abuse.ch/", desc: "Fighting malware and botnets." },
+                { name: "Talos", url: "https://talosintelligence.com/", desc: "Cisco Threat Intelligence." },
+                { name: "Recorded Future", url: "https://www.recordedfuture.com/", desc: "Intelligence cloud." },
+                { name: "OpenCTI", url: "https://www.opencti.io/", desc: "Cyber threat intelligence platform." },
+                { name: "ShadowServer", url: "https://www.shadowserver.org/", desc: "Internet security reporting." },
+                { name: "URLhaus", url: "https://urlhaus.abuse.ch/", desc: "Malware URL exchange." }
+            ],
+            "OpSec": [
+                { name: "Tails OS", url: "https://tails.boum.org/", desc: "The Amnesic Incognito Live System." },
+                { name: "Whonix", url: "https://www.whonix.org/", desc: "Anonymous operating system." },
+                { name: "Tor Browser", url: "https://www.torproject.org/", desc: "Defend against tracking." },
+                { name: "Mullvad VPN", url: "https://mullvad.net/", desc: "Privacy-focused VPN." },
+                { name: "ProtonVPN", url: "https://protonvpn.com/", desc: "Secure VPN." },
+                { name: "KeePass", url: "https://keepass.info/", desc: "Password safe." },
+                { name: "VeraCrypt", url: "https://www.veracrypt.fr/", desc: "Disk encryption." },
+                { name: "Qubes OS", url: "https://www.qubes-os.org/", desc: "Reasonably secure OS." },
+                { name: "BleachBit", url: "https://www.bleachbit.org/", desc: "Clean your system." },
+                { name: "Signal", url: "https://signal.org/", desc: "Encrypted messaging." },
+                { name: "PrivacyTools", url: "https://www.privacytools.io/", desc: "Encryption against global mass surveillance." }
+            ],
+            "Documentation": [
+                { name: "Hunchly", url: "https://www.hunchly.com/", desc: "Web capture tool for investigations." },
+                { name: "Maltego", url: "https://www.maltego.com/", desc: "Link analysis tool." },
+                { name: "CaseFile", url: "https://www.maltego.com/products/casefile", desc: "Offline intelligence." },
+                { name: "Obsidian", url: "https://obsidian.md/", desc: "Knowledge base." },
+                { name: "CherryTree", url: "https://www.giuspen.com/cherrytree/", desc: "Hierarchical note taking." },
+                { name: "Evidence Recorder", url: "https://encryptele.com/", desc: "Hashing and timestamping." },
+                { name: "Screenpresso", url: "https://www.screenpresso.com/", desc: "Screen capture." },
+                { name: "ShareX", url: "https://getsharex.com/", desc: "Screen capture and file sharing." },
+                { name: "Log2Timeline", url: "https://github.com/log2timeline/plaso", desc: "Timeline creation." },
+                { name: "Autopsy", url: "https://www.autopsy.com/", desc: "Digital forensics platform." },
+                { name: "Xmind", url: "https://xmind.app/", desc: "Mind mapping." }
+            ],
+            "Training": [
+                { name: "SANS OSINT", url: "https://www.sans.org/cyber-security-courses/open-source-intelligence-gathering/", desc: "Professional training." },
+                { name: "Bellingcat Guides", url: "https://www.bellingcat.com/category/resources/", desc: "Online investigation guides." },
+                { name: "IntelTechniques", url: "https://inteltechniques.com/", desc: "Michael Bazzell's training." },
+                { name: "OSINT Curious", url: "https://osintcurio.us/", desc: "Community blog and podcast." },
+                { name: "TryHackMe", url: "https://tryhackme.com/", desc: "Cyber security training." },
+                { name: "Hack The Box", url: "https://www.hackthebox.com/", desc: "Penetration testing labs." },
+                { name: "Plessas Training", url: "https://plessas.net/", desc: "OSINT training." },
+                { name: "OSINT Techniques", url: "https://osinttechniques.com/", desc: "Resources and tools." },
+                { name: "Blue Team Labs", url: "https://blueteamlabs.online/", desc: "Defensive security." },
+                { name: "DFIR Training", url: "https://www.dfir.training/", desc: "Forensics training." },
+                { name: "Awesome OSINT", url: "https://github.com/jivoi/awesome-osint", desc: "Curated list of OSINT resources." }
+            ]
+        };
+
+        // Initialize Global Stats
+        let totalCount = 0;
+
+        /**
+         * 2. RENDER ENGINE
+         */
+        const navWrapper = document.getElementById('navWrapper');
+        const gridContainer = document.getElementById('gridContainer');
+        const toolCountEl = document.getElementById('totalTools');
+
+        // Helper: Determine tool type
+        function getToolType(url) {
+            if (url.includes('github.com')) {
+                return { 
+                    class: 'icon-github', 
+                    icon: 'fa-brands fa-github', 
+                    tooltip: 'Repo / CLI' 
+                };
+            } else if (url.includes('t.me') || url.includes('telegram.org')) {
+                return { 
+                    class: 'icon-telegram', 
+                    icon: 'fa-brands fa-telegram', 
+                    tooltip: 'Telegram Bot' 
+                };
+            } else {
+                return { 
+                    class: 'icon-web', 
+                    icon: 'fa-solid fa-globe', 
+                    tooltip: 'Web Tool' 
+                };
+            }
+        }
+
+        function initApp() {
+            // Render Categories and Tools
+            for (const [category, tools] of Object.entries(osintData)) {
+                
+                // Sidebar Link
+                const navLink = document.createElement('a');
+                navLink.className = 'nav-item';
+                navLink.innerHTML = `<i class="fa-solid fa-folder"></i> ${category}`;
+                navLink.onclick = () => {
+                    document.getElementById(category.replace(/\s+/g, '')).scrollIntoView({behavior: 'smooth', block: 'start'});
+                    // Update Active State
+                    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                    navLink.classList.add('active');
+                    if(window.innerWidth <= 900) toggleSidebar();
+                };
+                navWrapper.appendChild(navLink);
+
+                // Main Content Block
+                const block = document.createElement('div');
+                block.className = 'category-block';
+                if (category === "INDIA DB") block.classList.add('highlight-db');
+                block.id = category.replace(/\s+/g, '');
+
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                
+                // Special icon for INDIA DB
+                const catIcon = category === "INDIA DB" ? '<i class="fa-solid fa-database" style="color:#fff; margin-right:10px; text-shadow: 0 0 20px #fff;"></i>' : '';
+                
+                header.innerHTML = `
+                    <div class="category-title">
+                        ${catIcon}${category} 
+                        <span class="category-count">${tools.length}</span>
+                    </div>
+                `;
+                block.appendChild(header);
+
+                const grid = document.createElement('div');
+                grid.className = 'tools-grid';
+
+                tools.forEach(tool => {
+                    totalCount++;
+                    const card = document.createElement('a');
+                    card.href = tool.url;
+                    card.target = "_blank";
+                    card.className = `tool-card`;
+                    
+                    const type = getToolType(tool.url);
+                    const domain = new URL(tool.url).hostname.replace('www.', '');
+
+                    card.innerHTML = `
+                        <div class="card-top">
+                            <div class="tool-name">${tool.name}</div>
+                            <div class="tool-type-icon ${type.class}" data-tooltip="${type.tooltip}">
+                                <i class="${type.icon}"></i>
+                            </div>
+                        </div>
+                        <div class="tool-desc">${tool.desc}</div>
+                        <div class="tool-meta">
+                            <i class="fa-solid fa-link"></i> ${domain}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                block.appendChild(grid);
+                gridContainer.appendChild(block);
+            }
+
+            toolCountEl.innerText = totalCount;
+            
+            // Intersection Observer for ScrollSpy
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        document.querySelectorAll('.nav-item').forEach(el => {
+                            if(el.innerText.replace(/\s/g, '').includes(id)) {
+                                el.classList.add('active');
+                            } else {
+                                el.classList.remove('active');
+                            }
+                        });
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.category-block').forEach(section => observer.observe(section));
+        }
+
+        /**
+         * 3. SEARCH LOGIC
+         */
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.tool-card');
+            
+            cards.forEach(card => {
+                const name = card.querySelector('.tool-name').innerText.toLowerCase();
+                const desc = card.querySelector('.tool-desc').innerText.toLowerCase();
+                const url = card.querySelector('.tool-meta').innerText.toLowerCase();
+                
+                if (name.includes(term) || desc.includes(term) || url.includes(term)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Hide empty categories
+            document.querySelectorAll('.category-block').forEach(block => {
+                const visibleCards = block.querySelectorAll('.tool-card[style="display: flex;"]');
+                const anyVisible = Array.from(block.querySelectorAll('.tool-card')).some(c => c.style.display !== 'none');
+                block.style.display = anyVisible ? 'block' : 'none';
+            });
+        });
+
+        /**
+         * 4. UI INTERACTIONS & CURSOR
+         */
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            // Using requestAnimationFrame for performance
+            requestAnimationFrame(() => {
+                cursorDot.style.left = `${e.clientX}px`;
+                cursorDot.style.top = `${e.clientY}px`;
+                
+                // Slight delay for outline done via CSS transition, just set position
+                cursorOutline.style.left = `${e.clientX}px`;
+                cursorOutline.style.top = `${e.clientY}px`;
+            });
+        });
+
+        /**
+         * 5. ADVANCED PARTICLE ANIMATION (Constellation Effect)
+         * Optimized for performance using requestAnimationFrame and distance checking
+         */
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        
+        // Configuration
+        const particleCount = 100; // Optimal for performance/aesthetics
+        const connectionDistance = 120;
+        const mouseDistance = 150;
+
+        // Resize Handling
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Mouse Tracking
+        const mouse = { x: null, y: null };
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5; // Slow, fluid speed
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 1.5 + 0.5;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off edges
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                // Mouse Interaction (Push gently)
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx*dx + dy*dy);
+                    if (distance < mouseDistance) {
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const force = (mouseDistance - distance) / mouseDistance;
+                        const directionX = forceDirectionX * force * 0.5;
+                        const directionY = forceDirectionY * force * 0.5;
+                        this.vx -= directionX;
+                        this.vy -= directionY;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; // Faint dots
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Draw Connections
+                for (let j = i; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        // Opacity based on distance
+                        let opacity = 1 - (distance / connectionDistance);
+                        ctx.strokeStyle = `rgba(150, 150, 150, ${opacity * 0.15})`; // Sleek, faint grey lines
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize Everything
+        initParticles();
+        animate();
+        initApp();
+
+    </script>
+</body>
+</html>
